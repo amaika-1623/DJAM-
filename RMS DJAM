@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mena Muria Klok, Radio, Wekker & Kalender</title>
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MM Klok">
+  <meta name="theme-color" content="#0f0d0b">
+
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Mena Muria Klok","short_name":"MM Klok","start_url":".","display":"fullscreen","background_color":"#0f0d0b","theme_color":"#0f0d0b","orientation":"portrait"}'>
+
+  <style>
+    :root {
+      --bg-color: #0f0d0b;
+      --gold-light: #f5d77f;
+      --gold-mid: #c89d2a;
+      --gold-dark: #826211;
+      --rms-blue: #0033a0;
+      --rms-white: #ffffff;
+      --rms-green: #007a33;
+      --rms-red: #d52b1e;
+      --card-bg: #14100c;
+      --border-color: #4a3822;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-color);
+      color: var(--gold-light);
+      font-family: 'Georgia', 'Times New Roman', serif;
+      overflow-x: hidden;
+      overflow-y: auto !important; /* Dwingt scrollen af */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px 10px 100px 10px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      letter-spacing: 3px;
+      color: var(--gold-light);
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    header p {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--gold-mid);
+      margin-top: 2px;
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px;
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.9);
+      margin-bottom: 15px;
+    }
+
+    /* Klok */
+    .clock-container {
+      position: relative;
+      width: 270px;
+      height: 270px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #2d251d 0%, #16120e 70%, #0a0806 100%);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.95), inset 0 0 15px rgba(0, 0, 0, 0.85);
+      border: 5px solid #231c15;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .rope-ring {
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      border: 2px dashed var(--gold-dark);
+      opacity: 0.6;
+    }
+
+    .number {
+      position: absolute;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--gold-light);
+      text-shadow: 1px 1px 3px #000, 0 0 6px var(--gold-dark);
+      text-align: center;
+    }
+
+    .num-12 { top: 6px; }
+    .num-1  { top: 18px; right: 58px; }
+    .num-2  { top: 52px; right: 18px; }
+    .num-3  { right: 10px; top: 118px; }
+    .num-4  { bottom: 52px; right: 18px; }
+    .num-5  { bottom: 18px; right: 58px; }
+    .num-6  { bottom: 6px; }
+    .num-7  { bottom: 18px; left: 58px; }
+    .num-8  { bottom: 52px; left: 18px; }
+    .num-9  { left: 10px; top: 118px; }
+    .num-10 { top: 52px; left: 18px; }
+    .num-11 { top: 18px; left: 58px; }
+
+    .emblem-wrapper {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .arc-text-top {
+      position: absolute;
+      top: 24px;
+      font-size: 0.6rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: var(--gold-light);
+    }
+
+    .center-title {
+      position: absolute;
+      top: 38px;
+      font-size: 0.95rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--gold-light);
+      z-index: 3;
+    }
+
+    .wings-svg {
+      position: absolute;
+      width: 160px;
+      height: 65px;
+      top: 50px;
+      z-index: 1;
+    }
+
+    .center-shield {
+      position: absolute;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #a32a2a 0%, #4a0d0d 100%);
+      border: 2px solid var(--gold-mid);
+      top: 56px;
+      z-index: 2;
+    }
+
+    .ribbon-dates {
+      position: absolute;
+      top: 98px;
+      width: 120px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 0.68rem;
+      color: var(--gold-light);
+      z-index: 3;
+    }
+
+    .arc-text-bottom {
+      position: absolute;
+      bottom: 28px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: var(--gold-light);
+    }
+
+    .date-foundation {
+      position: absolute;
+      bottom: 14px;
+      font-size: 0.58rem;
+      font-weight: bold;
+      color: var(--gold-light);
+    }
+
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+      z-index: 10;
+      background: linear-gradient(to right, var(--gold-dark), var(--gold-light), var(--gold-mid));
+    }
+
+    .hour-hand { width: 5px; height: 42px; margin-left: -2.5px; }
+    .minute-hand { width: 3px; height: 65px; margin-left: -1.5px; }
+    .second-hand { width: 2px; height: 75px; margin-left: -1px; background: var(--rms-red); z-index: 11; }
+
+    .center-cap {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--gold-light), var(--gold-dark));
+      border: 2px solid #111;
+      z-index: 12;
+    }
+
+    .bottom-label {
+      font-size: 1.3rem;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: var(--gold-light);
+      margin-bottom: 4px;
+    }
+
+    .digital-display {
+      background: rgba(0, 0, 0, 0.75);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+      width: 100%;
+    }
+
+    .date-text { color: var(--gold-mid); font-size: 0.7rem; }
+    .time-text { color: var(--gold-light); font-size: 1.15rem; font-weight: bold; letter-spacing: 2px; }
+
+    .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--gold-mid);
+      margin-bottom: 8px;
+      width: 100%;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    /* OPLOSSING VOOR ZWARTE/ONZICHTBARE INVOERVELDEN */
+    select, input[type="text"], input[type="number"], input[type="url"], input[type="time"] {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-color: #1a140e !important;
+      color: #f5d77f !important;
+      border: 1px solid #c89d2a !important;
+      border-radius: 4px !important;
+      padding: 8px 10px !important;
+      font-size: 0.85rem !important;
+      font-family: 'Georgia', serif !important;
+      outline: none !important;
+      width: 100% !important;
+      display: block !important;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.8) !important;
+    }
+
+    select option {
+      background-color: #1a140e !important;
+      color: #f5d77f !important;
+    }
+
+    .media-btn, .alarm-btn, .cal-btn {
+      background: linear-gradient(to bottom, var(--gold-light), var(--gold-mid)) !important;
+      color: #000 !important;
+      border: none !important;
+      border-radius: 4px !important;
+      padding: 8px 12px !important;
+      font-weight: bold !important;
+      font-size: 0.85rem !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+    }
+
+    .video-screen-wrapper {
+      width: 100%;
+      height: 150px;
+      background-color: #000;
+      border: 1px solid var(--gold-mid);
+      border-radius: 6px;
+      overflow: hidden;
+      display: none;
+      margin-top: 8px;
+    }
+
+    .video-screen-wrapper iframe { width: 100%; height: 100%; border: none; }
+    .media-status { font-size: 0.7rem; color: var(--gold-mid); margin-top: 6px; text-align: center; }
+
+    .alarm-container {
+      margin-top: 10px;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 10px;
+      width: 100%;
+    }
+
+    .calendar-header-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.75rem;
+      margin-top: 6px;
+    }
+
+    .cal-day-name {
+      color: var(--gold-mid);
+      font-weight: bold;
+      padding: 4px 0;
+    }
+
+    .cal-day {
+      padding: 6px 0;
+      background: rgba(30, 24, 18, 0.9);
+      border-radius: 3px;
+      color: var(--gold-light);
+    }
+
+    .cal-day.empty { background: transparent; }
+    .cal-day.today { border: 1px solid var(--gold-light); background: rgba(200, 157, 42, 0.4); font-weight: bold; }
+    .cal-day.selected { background: var(--gold-mid); color: #000; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>MENA MURIA</h1>
+    <p>KLOK • RADIO • WEKKER • EEUWKALENDER</p>
+  </header>
+
+  <!-- Klok Kaart -->
+  <div class="main-card">
+    <div class="clock-container">
+      <div class="rope-ring"></div>
+      <div class="number num-12">12</div>
+      <div class="number num-1">1</div>
+      <div class="number num-2">2</div>
+      <div class="number num-3">3</div>
+      <div class="number num-4">4</div>
+      <div class="number num-5">5</div>
+      <div class="number num-6">6</div>
+      <div class="number num-7">7</div>
+      <div class="number num-8">8</div>
+      <div class="number num-9">9</div>
+      <div class="number num-10">10</div>
+      <div class="number num-11">11</div>
+
+      <div class="emblem-wrapper">
+        <div class="arc-text-top">LEA LOHI SAMASURU</div>
+        <div class="center-title">★ MENA ★</div>
+        
+        <svg class="wings-svg" viewBox="0 0 200 80">
+          <path d="M 100 40 C 70 5, 30 10, 0 25 C 20 40, 60 48, 100 40 Z" fill="var(--rms-blue)"/>
+          <path d="M 100 40 C 70 20, 30 23, 10 33 C 30 48, 70 52, 100 40 Z" fill="var(--rms-white)"/>
+          <path d="M 100 40 C 70 30, 40 33, 20 42 C 40 55, 70 55, 100 40 Z" fill="var(--rms-green)"/>
+          <path d="M 100 40 C 70 38, 50 40, 30 50 C 50 60, 75 57, 100 40 Z" fill="var(--rms-red)"/>
+
+          <path d="M 100 40 C 130 5, 170 10, 200 25 C 180 40, 140 48, 100 40 Z" fill="var(--rms-blue)"/>
+          <path d="M 100 40 C 130 20, 170 23, 190 33 C 170 48, 130 52, 100 40 Z" fill="var(--rms-white)"/>
+          <path d="M 100 40 C 130 30, 160 33, 180 42 C 160 55, 130 55, 100 40 Z" fill="var(--rms-green)"/>
+          <path d="M 100 40 C 130 38, 150 40, 170 50 C 150 60, 125 57, 100 40 Z" fill="var(--rms-red)"/>
+        </svg>
+
+        <div class="center-shield"></div>
+        <div class="ribbon-dates"><span>25</span><span>04</span></div>
+        <div class="arc-text-bottom">MURIA</div>
+        <div class="date-foundation">25-04-1950</div>
+      </div>
+
+      <div class="hand hour-hand" id="hour"></div>
+      <div class="hand minute-hand" id="minute"></div>
+      <div class="hand second-hand" id="second"></div>
+      <div class="center-cap"></div>
+    </div>
+
+    <div class="bottom-label">ABORU</div>
+
+    <div class="digital-display">
+      <div class="date-text" id="date-display">datum laden...</div>
+      <div class="time-text" id="digital-clock">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- Media Kaart -->
+  <div class="main-card">
+    <div class="section-title">📻 STREAM & RADIO SPELER</div>
+
+    <div class="controls-row">
+      <select id="stationSelect">
+        <optgroup label="📻 Radiostations">
+          <option value="audio:https://icecast.omroep.nl/qmusic-bb-mp3">Qmusic</option>
+          <option value="audio:https://stream.100p.nl/100p.mp3">100% NL</option>
+          <option value="audio:https://stream.radiosunrise.nl/system/stream">Radio Sunrise (NL)</option>
+          <option value="audio:https://icecast.vrt.be/mnm-high.mp3">MNM (België)</option>
+          <option value="audio:https://stream.zeno.fm/f3wvbb1278uvv">Radio DMS 102.7 Ambon</option>
+        </optgroup>
+        <optgroup label="📺 Live Video (YouTube)">
+          <option value="yt:jfKfPfyJRdk">Lofi Girl (Live Stream)</option>
+        </optgroup>
+      </select>
+      <button id="playBtn" class="media-btn">▶ Play</button>
+    </div>
+
+    <input type="url" id="customUrlInput" placeholder="Plak YouTube of stream URL..." style="margin-bottom: 6px;">
+
+    <div class="video-screen-wrapper" id="videoWrapper">
+      <iframe id="videoPlayer" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <div class="media-status" id="mediaStatus">Speler gereed</div>
+
+    <!-- Wekker -->
+    <div class="alarm-container">
+      <div class="section-title">⏰ WEKKER / ALARM</div>
+      <div class="controls-row">
+        <input type="time" id="alarmTimeInput" value="07:00">
+        <button id="alarmSetBtn" class="alarm-btn">Zet Wekker</button>
+      </div>
+      <div class="alarm-status" id="alarmStatus">Geen wekker ingesteld</div>
+    </div>
+  </div>
+
+  <!-- Kalender Kaart -->
+  <div class="main-card">
+    <div class="section-title">📅 EEUWKALENDER</div>
+    
+    <div class="calendar-header-row">
+      <button class="cal-btn" id="todayCalBtn">Vandaag</button>
+      <button class="cal-btn" id="prevMonthBtn">◀ Maand</button>
+      <button class="cal-btn" id="nextMonthBtn">Maand ▶</button>
+    </div>
+
+    <div class="controls-row">
+      <select id="monthSelect"></select>
+      <input type="number" id="yearInput" min="1" max="9999" style="width: 80px !important;">
+      <button id="jumpDateBtn" class="media-btn">Ga</button>
+    </div>
+
+    <div style="font-weight: bold; margin: 8px 0; color: var(--gold-light); font-size: 0.9rem;" id="calendarMonthTitle"></div>
+
+    <div class="cal-grid" id="calendarGrid">
+      <div class="cal-day-name">Ma</div>
+      <div class="cal-day-name">Di</div>
+      <div class="cal-day-name">Wo</div>
+      <div class="cal-day-name">Do</div>
+      <div class="cal-day-name">Vr</div>
+      <div class="cal-day-name">Za</div>
+      <div class="cal-day-name">Zo</div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
+
+  <script>
+    // 1. Klok
+    function updateClock() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes();
+      const hours = now.getHours();
+
+      const secDeg = (seconds / 60) * 360;
+      const minDeg = ((minutes + seconds / 60) / 60) * 360;
+      const hourDeg = (((hours % 12) + minutes / 60) / 12) * 360;
+
+      document.getElementById('second').style.transform = `rotate(${secDeg}deg)`;
+      document.getElementById('minute').style.transform = `rotate(${minDeg}deg)`;
+      document.getElementById('hour').style.transform = `rotate(${hourDeg}deg)`;
+
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('date-display').innerText = now.toLocaleDateString('nl-NL', options);
+      
+      const pad = (num) => String(num).padStart(2, '0');
+      document.getElementById('digital-clock').innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+      checkAlarm(hours, minutes, seconds);
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Radio & Video
+    const audioPlayer = document.getElementById('audioPlayer');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const playBtn = document.getElementById('playBtn');
+    const stationSelect = document.getElementById('stationSelect');
+    const customUrlInput = document.getElementById('customUrlInput');
+    const mediaStatus = document.getElementById('mediaStatus');
+
+    let isPlaying = false;
+
+    function extractYouTubeId(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function stopAllMedia() {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute('src');
+      audioPlayer.load();
+
+      videoPlayer.src = "";
+      videoWrapper.style.display = 'none';
+
+      isPlaying = false;
+      playBtn.innerText = '▶ Play';
+      mediaStatus.innerText = 'Speler uitgeschakeld';
+    }
+
+    function playMedia() {
+      stopAllMedia();
+
+      let targetVal = customUrlInput.value.trim() !== '' ? customUrlInput.value.trim() : stationSelect.value;
+
+      if (!targetVal) {
+        mediaStatus.innerText = 'Voer een URL in of kies een zender!';
+        return;
+      }
+
+      const ytId = extractYouTubeId(targetVal);
+
+      if (ytId || targetVal.startsWith('yt:')) {
+        let finalYtId = ytId ? ytId : targetVal.replace('yt:', '');
+        let embedUrl = `https://www.youtube-nocookie.com/embed/${finalYtId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
+
+        videoWrapper.style.display = 'block';
+        videoPlayer.src = embedUrl;
+        
+        isPlaying = true;
+        playBtn.innerText = '⏸ Stop';
+        mediaStatus.innerText = 'Live videostream actief';
+      } else {
+        let audioUrl = targetVal.replace('audio:', '');
+        if (audioUrl.startsWith('http://')) {
+          audioUrl = 'https://corsproxy.io/?' + encodeURIComponent(audioUrl);
+        }
+
+        mediaStatus.innerText = 'Verbinden met audio...';
+        audioPlayer.src = audioUrl;
+
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            isPlaying = true;
+            playBtn.innerText = '⏸ Stop';
+            mediaStatus.innerText = 'Audio speelt af...';
+          }).catch(err => {
+            console.error(err);
+            mediaStatus.innerText = 'Fout bij laden van audio stream';
+          });
+        }
+      }
+    }
+
+    playBtn.addEventListener('click', () => {
+      if (!isPlaying) { playMedia(); } else { stopAllMedia(); }
+    });
+
+    // 3. Wekker
+    let alarmTime = null;
+    let alarmTriggeredToday = false;
+    const alarmTimeInput = document.getElementById('alarmTimeInput');
+    const alarmSetBtn = document.getElementById('alarmSetBtn');
+    const alarmStatus = document.getElementById('alarmStatus');
+
+    alarmSetBtn.addEventListener('click', () => {
+      const val = alarmTimeInput.value;
+      if (val) {
+        alarmTime = val;
+        alarmTriggeredToday = false;
+        alarmStatus.innerText = `Wekker ingesteld op ${alarmTime}`;
+        alarmSetBtn.innerText = 'Annuleer';
+      } else {
+        alarmTime = null;
+        alarmStatus.innerText = 'Geen wekker ingesteld';
+        alarmSetBtn.innerText = 'Zet Wekker';
+      }
+    });
+
+    function checkAlarm(h, m, s) {
+      if (!alarmTime) return;
+      const pad = (n) => String(n).padStart(2, '0');
+      const currentTimeStr = `${pad(h)}:${pad(m)}`;
+
+      if (currentTimeStr === alarmTime && !alarmTriggeredToday && s === 0) {
+        alarmTriggeredToday = true;
+        alarmStatus.innerText = `⏰ Wekker gaat af! (${alarmTime})`;
+        playMedia();
+      }
+    }
+
+    // 4. Kalender
+    const monthsNames = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
+    let calDate = new Date();
+    let selectedDate = new Date();
+
+    const monthSelect = document.getElementById('monthSelect');
+    monthsNames.forEach((m, idx) => {
+      let opt = document.createElement('option');
+      opt.value = idx;
+      opt.innerText = m;
+      monthSelect.appendChild(opt);
+    });
+
+    function renderCalendar(year, month) {
+      const grid = document.getElementById('calendarGrid');
+      while (grid.children.length > 7) {
+        grid.removeChild(grid.lastChild);
+      }
+
+      document.getElementById('calendarMonthTitle').innerText = `${monthsNames[month]} ${year}`;
+      monthSelect.value = month;
+      document.getElementById('yearInput').value = year;
+
+      let firstDayIndex = new Date(year, month, 1).getDay();
+      firstDayIndex = (firstDayIndex + 6) % 7;
+
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        let emptyDiv = document.createElement('div');
+        emptyDiv.classList.add('cal-day', 'empty');
+        grid.appendChild(emptyDiv);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        let dayDiv = document.createElement('div');
+        dayDiv.classList.add('cal-day');
+        dayDiv.innerText = d;
+
+        if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+          dayDiv.classList.add('today');
+        }
+
+        if (year === selectedDate.getFullYear() && month === selectedDate.getMonth() && d === selectedDate.getDate()) {
+          dayDiv.classList.add('selected');
+        }
+
+        dayDiv.addEventListener('click', () => {
+          selectedDate = new Date(year, month, d);
+          renderCalendar(year, month);
+        });
+
+        grid.appendChild(dayDiv);
+      }
+    }
+
+    document.getElementById('todayCalBtn').addEventListener('click', () => {
+      calDate = new Date();
+      selectedDate = new Date();
+      renderCalendar(calDate.getFullYear(), calDate.getMonth());
+    });
+
+    document.getElementById('prevMonthBtn').addEventListener('click', () => {
+      calDate.setMonth(calDate.getMonth() - 1);
+      renderCalendar(calDate.getFullYear(), calDate.getMonth());
+    });
+
+    document.getElementById('nextMonthBtn').addEventListener('click', () => {
+      calDate.setMonth(calDate.getMonth() + 1);
+      renderCalendar(calDate.getFullYear(), calDate.getMonth());
+    });
+
+    document.getElementById('jumpDateBtn').addEventListener('click', () => {
+      let y = parseInt(document.getElementById('yearInput').value);
+      let m = parseInt(monthSelect.value);
+      if (!isNaN(y) && y >= 1 && y <= 9999) {
+        calDate.setFullYear(y);
+        calDate.setMonth(m);
+        renderCalendar(y, m);
+      }
+    });
+
+    renderCalendar(calDate.getFullYear(), calDate.getMonth());
+  </script>
+</body>
+</html>
