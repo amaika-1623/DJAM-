@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Mena Muria Klok, Radio, Wekker & Kalender</title>
 
   <meta name="mobile-web-app-capable" content="yes">
@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="MM Klok">
   <meta name="theme-color" content="#0f0d0b">
 
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Mena Muria Klok","short_name":"MM Klok","start_url":".","display":"fullscreen","background_color":"#0f0d0b","theme_color":"#0f0d0b","orientation":"portrait"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Mena Muria Klok","short_name":"MM Klok","start_url":".","display":"standalone","background_color":"#0f0d0b","theme_color":"#0f0d0b","orientation":"portrait"}'>
 
   <style>
     :root {
@@ -33,14 +33,14 @@
       padding: 0;
     }
 
+    /* Vrij scrollen op alle mobiele apparaten */
     html, body {
       width: 100%;
-      height: 100%;
+      min-height: 100vh;
       background-color: var(--bg-color);
       color: var(--gold-light);
       font-family: 'Georgia', 'Times New Roman', serif;
-      overflow-x: hidden;
-      overflow-y: auto !important; /* Dwingt scrollen af */
+      overflow-y: auto !important;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -48,7 +48,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 15px 10px 100px 10px;
+      padding: 15px 10px 120px 10px; /* Extra ruimte onderaan zodat alles zichtbaar is */
     }
 
     header {
@@ -267,7 +267,6 @@
       margin-bottom: 8px;
     }
 
-    /* OPLOSSING VOOR ZWARTE/ONZICHTBARE INVOERVELDEN */
     select, input[type="text"], input[type="number"], input[type="url"], input[type="time"] {
       -webkit-appearance: none !important;
       -moz-appearance: none !important;
@@ -282,7 +281,6 @@
       outline: none !important;
       width: 100% !important;
       display: block !important;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.8) !important;
     }
 
     select option {
@@ -333,7 +331,7 @@
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 2px;
+      gap: 3px;
       width: 100%;
       text-align: center;
       font-size: 0.75rem;
@@ -347,7 +345,7 @@
     }
 
     .cal-day {
-      padding: 6px 0;
+      padding: 8px 0;
       background: rgba(30, 24, 18, 0.9);
       border-radius: 3px;
       color: var(--gold-light);
@@ -489,7 +487,6 @@
   <audio id="audioPlayer" preload="auto" crossorigin="anonymous"></audio>
 
   <script>
-    // 1. Klok
     function updateClock() {
       const now = new Date();
       const seconds = now.getSeconds();
@@ -516,7 +513,6 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. Radio & Video
     const audioPlayer = document.getElementById('audioPlayer');
     const videoPlayer = document.getElementById('videoPlayer');
     const videoWrapper = document.getElementById('videoWrapper');
@@ -537,10 +533,8 @@
       audioPlayer.pause();
       audioPlayer.removeAttribute('src');
       audioPlayer.load();
-
       videoPlayer.src = "";
       videoWrapper.style.display = 'none';
-
       isPlaying = false;
       playBtn.innerText = '▶ Play';
       mediaStatus.innerText = 'Speler uitgeschakeld';
@@ -548,23 +542,17 @@
 
     function playMedia() {
       stopAllMedia();
-
       let targetVal = customUrlInput.value.trim() !== '' ? customUrlInput.value.trim() : stationSelect.value;
-
       if (!targetVal) {
         mediaStatus.innerText = 'Voer een URL in of kies een zender!';
         return;
       }
-
       const ytId = extractYouTubeId(targetVal);
-
       if (ytId || targetVal.startsWith('yt:')) {
         let finalYtId = ytId ? ytId : targetVal.replace('yt:', '');
         let embedUrl = `https://www.youtube-nocookie.com/embed/${finalYtId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
-
         videoWrapper.style.display = 'block';
         videoPlayer.src = embedUrl;
-        
         isPlaying = true;
         playBtn.innerText = '⏸ Stop';
         mediaStatus.innerText = 'Live videostream actief';
@@ -573,10 +561,8 @@
         if (audioUrl.startsWith('http://')) {
           audioUrl = 'https://corsproxy.io/?' + encodeURIComponent(audioUrl);
         }
-
         mediaStatus.innerText = 'Verbinden met audio...';
         audioPlayer.src = audioUrl;
-
         const playPromise = audioPlayer.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
@@ -595,7 +581,6 @@
       if (!isPlaying) { playMedia(); } else { stopAllMedia(); }
     });
 
-    // 3. Wekker
     let alarmTime = null;
     let alarmTriggeredToday = false;
     const alarmTimeInput = document.getElementById('alarmTimeInput');
@@ -620,7 +605,6 @@
       if (!alarmTime) return;
       const pad = (n) => String(n).padStart(2, '0');
       const currentTimeStr = `${pad(h)}:${pad(m)}`;
-
       if (currentTimeStr === alarmTime && !alarmTriggeredToday && s === 0) {
         alarmTriggeredToday = true;
         alarmStatus.innerText = `⏰ Wekker gaat af! (${alarmTime})`;
@@ -628,7 +612,6 @@
       }
     }
 
-    // 4. Kalender
     const monthsNames = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
     let calDate = new Date();
     let selectedDate = new Date();
@@ -646,7 +629,6 @@
       while (grid.children.length > 7) {
         grid.removeChild(grid.lastChild);
       }
-
       document.getElementById('calendarMonthTitle').innerText = `${monthsNames[month]} ${year}`;
       monthSelect.value = month;
       document.getElementById('yearInput').value = year;
