@@ -521,7 +521,6 @@
 
     let isPlaying = false;
 
-    // Slimme YouTube ID starter (herkent ALLE soorten links)
     function extractYouTubeId(url) {
       if (!url) return null;
       let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
@@ -529,7 +528,6 @@
       if (match && match[2].length === 11) {
         return match[2];
       }
-      // Voor YouTube Music
       if (url.includes('music.youtube.com/watch?v=')) {
         let parts = url.split('v=');
         if (parts[1]) {
